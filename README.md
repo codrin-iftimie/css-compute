@@ -13,3 +13,7 @@ This project, when finished, could be used to isolate the CSS from React compone
  - Transform the `node index.js` into a gulp task (that will accept options, ofc)
  - Transform the resolveStyle.js, walkTheDOM method from app.jsx into a React Mixin that will also hook recursivelly into his kids and check for changes
  
+## Notes
+
+`node index.js` will create the css map
+`gulp` will start a server on 3009 port
