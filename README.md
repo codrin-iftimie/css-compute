@@ -5,3 +5,11 @@ This project will end up into a *gulp task* that will convert a CSS file (prefer
 By creating a .baseClass inside the CSS file, all future declarations will inherit this one, and overwrite existing classes. It will also add !important to all declarations.
 
 This project, when finished, could be used to isolate the CSS from React components from the rest of the page. Usefull for widgets/embdables where iframes are not an option.
+
+## Roadmap
+
+ - Support composed CSS classes and more specific tags (ex: .mother.father-side ul.mother) in resolveStyle.js
+ - Find a way to hook into React componentWillUpdate to find the CSS classNames that have changed
+ - Transform the `node index.js` into a gulp task (that will accept options, ofc)
+ - Transform the resolveStyle.js, walkTheDOM method from app.jsx into a React Mixin that will also hook recursivelly into his kids and check for changes
+ 
