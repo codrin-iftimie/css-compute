@@ -1,0 +1,41 @@
+.bunica {
+  color: red;
+}
+.bunica .mama .fiica {
+  color: #fff;
+  background-color: blue;
+}
+.bunica .mama {
+  color: #ddd;
+}
+.mama {
+  color: #999;
+}
+.fiica {
+  color: #f00;
+}
+.bunica .fiica {
+  color: #ff0;
+  background-color: red;
+  font-style: italic;
+}
+.bunica .fiica {
+  color: #fff000;
+}
+.child-comp {
+  background: pink;
+}
+.mama .fiica .child-comp {
+  font-weight: bold;
+}
+.bunica .fiica .child-comp {
+  font-weight: bold;
+}
+.bunica .mama .child-comp {
+  font-weight: normal;
+  background: purple;
+}
+.bunica .mama .fiica .child-comp {
+  color: green;
+}
+/*# sourceMappingURL=data:application/json,%7B%22version%22%3A3%2C%22sources%22%3A%5B%22%2Fhome%2Fcodrin%2FWork%2Fcss-compute%2Fstyles%2Fmain.less%22%5D%2C%22names%22%3A%5B%5D%2C%22mappings%22%3A%22AAAA%3BEACC%2CUAAA%3B%3BAAED%2COAAQ%2CMAAM%3BEACb%2CWAAA%3BEACA%2CsBAAA%3B%3BAAED%2COAAQ%3BEACP%2CWAAA%3B%3BAAGD%3BEACC%2CWAAA%3B%3BAAGD%3BEACC%2CWAAA%3B%3BAAGD%2COAAQ%3BEACP%2CWAAA%3BEACA%2CqBAAA%3BEACA%2CkBAAA%3B%3BAAGD%2COAAQ%3BEACP%2CcAAA%3B%3BAAGD%3BEACC%2CgBAAA%3B%3BAAGD%2CKAAM%2COAAO%3BEACZ%2CiBAAA%3B%3BAAGD%2COAAQ%2COAAO%3BEACd%2CiBAAA%3B%3BAAGD%2COAAQ%2CMAAM%3BEACb%2CmBAAA%3BEACA%2CkBAAA%3B%3BAAGD%2COAAQ%2CMAAM%2COAAO%3BEACpB%2CYAAA%22%7D */
