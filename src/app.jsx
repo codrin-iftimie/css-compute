@@ -5,6 +5,25 @@ var CSS = require('../styles/main.css.js');
 var allDeclarations = CSS.allDeclarations;
 var allInharitances = CSS.allInharitances;
 var classSet = React.addons.classSet;
+var merge = require('react/lib/merge');
+
+var ComputeMixin = {
+  test: function(){
+    console.log('test mixin');
+  }
+}
+
+var hook = function(React){
+  var createClass = React.createClass;
+  React.createClass = function(reactClass){
+    var mixins = reactClass.mixins || [];
+    mixins.push(ComputeMixin);
+    reactClass.mixins = mixins;
+    return createClass(reactClass);
+  }
+};
+
+hook(React);
 
 var ChildComp = React.createClass({
 	render: function(){
@@ -12,7 +31,7 @@ var ChildComp = React.createClass({
 			<div className="child-comp">
         lsssss
       </div>
-		)
+		);
 	}
 });
 var App = React.createClass({
@@ -85,13 +104,13 @@ var App = React.createClass({
   _subRender: function(comp, parent){
   	var render = comp.render();
   	this._walkTheDom(render, parent)
-  	comp.render = function(){ return render }
+  	comp.render = function(){ return render };
   },
 	componentDidMount: function(){
 		var render = this.render();
 		this._walkTheDom(render);
 		this.render = function(){ return render};
-		this.forceUpdate();
+    this.forceUpdate();
 	},
 	render: function(){
 		var className = classSet({
