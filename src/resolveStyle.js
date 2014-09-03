@@ -92,9 +92,11 @@ var resolveStyle = function(forSelector, allDeclarations, allInharitances){
 	}
 
 	var existingDeclarations = []
-	for (var i = 0; i < allDeclarations[lastElem].length; i++) {
-	 	existingDeclarations.push(allDeclarations[lastElem][i])
-	};
+	if(allDeclarations[lastElem]){
+		for (var i = 0; i < allDeclarations[lastElem].length; i++) {
+		 	existingDeclarations.push(allDeclarations[lastElem][i])
+		};
+	}
 	var validParents = [];
 
 	parents = prioritizeParents(parents, forSelector);

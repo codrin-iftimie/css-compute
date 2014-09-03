@@ -5,11 +5,20 @@ var CSS = require('../styles/main.css.js');
 var allDeclarations = CSS.allDeclarations;
 var allInharitances = CSS.allInharitances;
 var classSet = React.addons.classSet;
-var merge = require('react/lib/merge');
+var ReactOwner = require('react/lib/ReactOwner');
 
 var ComputeMixin = {
-  test: function(){
-    console.log('test mixin');
+  getInitialState: function(){
+    return {
+      force: false
+    }
+  },
+  componentDidMount: function(){
+  },
+  componentDidUpdate: function(){
+    if(this._owner){
+      this._owner.updateStyle();
+    }
   }
 }
 
@@ -26,9 +35,18 @@ var hook = function(React){
 hook(React);
 
 var ChildComp = React.createClass({
+  getInitialState: function(){
+    return {
+      test: false
+    }
+  },
 	render: function(){
-		return(
-			<div className="child-comp">
+		var className = classSet({
+      "child-comp": true,
+      "extra-class": this.state.test
+    });
+    return(
+			<div className={className}>
         lsssss
       </div>
 		);
@@ -58,20 +76,21 @@ var App = React.createClass({
     	//root node
     	node.props.parentClassName = ['.' + node.props.className];
     }
-
     node.props.style = this._getStyle(node.props.parentClassName);
   },
   _getFirstChild: function(node, startFrom){
     startFrom = startFrom || 0;
     var kids = node.props.children;
+    
     if(kids && typeof kids !== 'string' && kids.render){
-      this._subRender(kids, node)
+      this._subRender(kids, node);
     }
  
  
     if(!kids || startFrom === kids.length) {
       return ;
     }
+
     for (var i = startFrom; i < kids.length; i++) {
       var kid = kids[i];
       if(typeof kid === 'object'){
@@ -91,6 +110,10 @@ var App = React.createClass({
       node = null;
     }
     while(node){
+      if(node.props.ref){
+        node._owner = this;
+        node._pendingOwner = this;
+      }
       this._walkTheDom(node, parNode);
       var nextNode = this._getFirstChild(parNode, lastChild);
       if(nextNode){
@@ -102,16 +125,27 @@ var App = React.createClass({
     }
   },
   _subRender: function(comp, parent){
-  	var render = comp.render();
-  	this._walkTheDom(render, parent)
-  	comp.render = function(){ return render };
+    if(comp.getInitialState){
+      comp.state = comp.getInitialState();
+    }
+    var orignalRender = comp._render || comp.render;
+    var render = comp._render ? comp._render() : comp.render();
+    this._walkTheDom(render, parent);
+    comp._render = orignalRender;
+    comp.render = function(){ return render };
   },
-	componentDidMount: function(){
-		var render = this.render();
-		this._walkTheDom(render);
-		this.render = function(){ return render};
+  updateStyle: function(){
+    this._subRender(this, null);
     this.forceUpdate();
+  },
+  componentDidMount: function(){
+    this.updateStyle();
 	},
+  _handleButtonClick: function(){
+    this.refs['first-child-comp'].setState({
+      test: true
+    });
+  },
 	render: function(){
 		var className = classSet({
 			"grandmother": true
@@ -123,11 +157,12 @@ var App = React.createClass({
 					mother
 					<div className="daughter">
 						something
-						<ChildComp />
+						<ChildComp  ref="first-child-comp"/>
 					</div>
           <ChildComp />
 				</div>
         <ChildComp />
+        <button onClick={this._handleButtonClick}>I will change something</button>
 			</div>
 		)
 	}
