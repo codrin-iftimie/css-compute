@@ -1,18 +1,11 @@
 var ReactCompositeComponentBase = require('react/lib/ReactCompositeComponent').Base
-var mountComponent = ReactCompositeComponentBase.prototype.mountComponent;
-ReactCompositeComponentBase.prototype.mountComponent = function(){
-  if(this._descriptor.props._parent){
-    arguments[1].parent = this._descriptor.props._parent
-  }
-  return mountComponent.apply(this, arguments);
-}
 
-var updateComponent = ReactCompositeComponentBase.prototype.updateComponent;
-ReactCompositeComponentBase.prototype.updateComponent = function(){
-  this.cssUpdate = true;
-  console.log(arguments)
-  return updateComponent.apply(this, arguments);
-  this.cssUpdate = true;
+var _renderValidatedComponent = ReactCompositeComponentBase.prototype._renderValidatedComponent;
+ReactCompositeComponentBase.prototype._renderValidatedComponent = function(){
+  var out = _renderValidatedComponent.apply(this, arguments);
+  CssHelper._walkTheDom(out, this.props._parent);
+  console.log(out.props.style)
+  return out;
 }
 
 
@@ -93,29 +86,6 @@ ReactMultiChild.Mixin.mountChildren = function(){
   return out;
 };
 
-var ReactDOMComponent = require('react/lib/ReactDOMComponent');
-var _createOpenTagMarkupAndPutListeners = ReactDOMComponent.prototype._createOpenTagMarkupAndPutListeners;
-
-ReactDOMComponent.prototype._createOpenTagMarkupAndPutListeners = function(){
-  if(!once){
-    CssHelper._walkTheDom(this);
-    once = true;
-  }
-  if(arguments[0].parent){
-    CssHelper._walkTheDom(this, arguments[0].parent);
-  }
-
-  var out = _createOpenTagMarkupAndPutListeners.apply(this, arguments);
-  return out;
-}
-
-var _createContentMarkup = ReactDOMComponent.prototype._createContentMarkup;
-
-ReactDOMComponent.prototype._createContentMarkup = function(){
-  var out = _createContentMarkup.apply(this, arguments);
-  return out;
-}
-
 /** @jsx React.DOM */
 var React = require("react/addons");
 var ComputeCSS = require("./resolveStyle.js");
@@ -127,9 +97,12 @@ var classSet = React.addons.classSet;
 
 
 var ComputeMixin = {
-  componentDidMount: function(){
-  },
-  componentDidUpdate: function(){
+  updateStyle: function(){
+      if(this.props._parent){
+        CssHelper._walkTheDom(this._descriptor._renderedComponent, this.props._parent);
+      } else {
+        CssHelper._walkTheDom(this._descriptor._renderedComponent);
+      }
   }
 }
 
@@ -165,14 +138,23 @@ var ChildComp = React.createClass({
 	}
 });
 var App = React.createClass({
+  getInitialState: function(){
+    return{
+      globalTest: false
+    }
+  },
   _handleButtonClick: function(){
     this.refs['first-child-comp'].setState({
       test: true
     });
+    this.setState({
+      globalTest: true
+    })
   },
 	render: function(){
 		var className = classSet({
-			"grandmother": true
+			"grandmother": true,
+      "extra-class": this.state.globalTest
 		});
 		return(
 			<div className={className}>

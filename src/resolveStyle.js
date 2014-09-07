@@ -1,3 +1,11 @@
+function pretifyElem(elem){
+	var elems = elem.split(' ');
+	if(elems.length > 0){
+		return(elems.join('.'))
+	} else {
+		return elem;
+	}
+}
 function overwriteDeclarations(existingDeclarations, newDeclarations){
 	var out = [];
 	var newProps = [];
@@ -83,6 +91,7 @@ var getScore = function(parent, forSelector){
 
 var resolveStyle = function(forSelector, allDeclarations, allInharitances){
 	var lastElem = forSelector[forSelector.length - 1];
+	lastElem = pretifyElem(lastElem);
 	var parents = [];
 
 	if(allInharitances[lastElem]){
@@ -150,7 +159,6 @@ var resolveStyle = function(forSelector, allDeclarations, allInharitances){
 		var prop = elem.property
 		out[prop] = elem.value
 	});
-
 	return out;
 }
 module.exports = resolveStyle;
