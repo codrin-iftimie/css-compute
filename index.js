@@ -14,28 +14,38 @@ function pushIfNotExist(where, what){
 }
 
 function overwriteDeclarations(existingDeclarations, newDeclarations){
+	var out = [];
 	var newProps = [];
+
+	existingDeclarations.forEach(function(existingDeclaration){
+		var declar = {
+			property: existingDeclaration.property,
+			value: existingDeclaration.value
+		}
+		out.push(declar);
+	});
 	newDeclarations.forEach(function(newDeclaration){
 		var isNewProp = true;
-		existingDeclarations.forEach(function(existingDeclaration){		
+		out.forEach(function(existingDeclaration){
 			if(existingDeclaration.property === newDeclaration.property) {
 				//if we have the same property 
 				// we replace the existing value with the new one
 				isNewProp = false;
 				existingDeclaration.value = newDeclaration.value;
-			}
+			} 
 		});
 		if(isNewProp){
 			newProps.push(newDeclaration);
 		}
 	});
 	newProps.forEach(function(prop){
-		existingDeclarations.push(prop);
+		out.push(prop);
 	})
+	return out;
 }
 
 function mergeDeclarations(selector, newDeclarations){
-	parsedDeclarations = _.map(newDeclarations, function(declar){
+	var parsedDeclarations = _.map(newDeclarations, function(declar){
 		return {
 			property: declar.property,
 			value: declar.value
@@ -52,7 +62,7 @@ function mergeDeclarations(selector, newDeclarations){
 				value: declar.value
 			}
 		});
-		overwriteDeclarations(existingDeclarations, parsedDeclarations);
+		existingDeclarations = overwriteDeclarations(existingDeclarations, parsedDeclarations);
 
 	} else {
 
@@ -75,6 +85,39 @@ function prioritizeParents(parents){
 	return parents;
 }
 
+function registerParent(selectorElems, index){
+	var lastElem = selectorElems[selectorElems.length -1];	
+	var parent = '';
+	for (var i = 0; i <= index; i++) {
+		parent += ' ' + selectorElems[i]
+	};
+	if(parent.charAt(0) === ' '){
+		parent.substr(1);
+	}
+
+	//don't register himself as his parent
+	if(index === selectorElems.length - 1){
+		return;
+	}
+
+	//composed lastElem
+	var lastElems = lastElem.split('.');
+	lastElems.splice(0, 1);
+	if(lastElems.length > 1){
+		for (var i = 0; i < lastElems.length; i++) {
+			addParentFor(lastElems[i], parent);
+		};	
+	}
+	addParentFor(lastElem, parent);
+
+}
+
+function addParentFor(lastElem, parent){
+	//register parents
+	allInharitances[lastElem] = allInharitances[lastElem] || [];
+	pushIfNotExist(allInharitances[lastElem], parent + ' ' + lastElem);
+}
+
 function computeRules(rules){
 
 	var simpleRules = [];
@@ -87,37 +130,25 @@ function computeRules(rules){
 		var declarations = rule.declarations;
 
 		selectors.forEach(function(selector){
-			
 			mergeDeclarations(selector, declarations);
 
 			var selectorElems = selector.split(' ');
-			var lastElem = selectorElems[selectorElems.length -1];
 
 			//if composed selector
 			if(selectorElems.length > 1){
 				//map each parent to it's child
 				selectorElems.forEach(function(elem, index){
-					var parent = '';
-					for (var i = 0; i <= index; i++) {
-						parent += ' ' + selectorElems[i]
-					};
-					if(parent.charAt(0) === ' '){
-						parent.substr(1);
+					var subSelectors = elem.split('.');
+					if(subSelectors.length > 2){
+						for (var i = 0; i < subSelectors.length; i++) {
+							var selectorElemsCopy = selectorElems.slice(0);
+							if(subSelectors[i] !== '') {
+								selectorElemsCopy[index] = '.' + subSelectors[i];
+								registerParent(selectorElemsCopy, index)
+							}
+						};
 					}
-
-					//don't register himself as his parent
-					if(index === selectorElems.length - 1){
-						return;
-					}
-
-					//register parents
-					if(allInharitances[lastElem]) {
-						pushIfNotExist(allInharitances[lastElem], parent + ' ' + lastElem);
-					} else {
-						allInharitances[lastElem] = [];
-						pushIfNotExist(allInharitances[lastElem], parent + ' ' + lastElem);
-					}
-
+					registerParent(selectorElems, index)
 				})
 			}
 

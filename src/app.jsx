@@ -4,7 +4,6 @@ var _renderValidatedComponent = ReactCompositeComponentBase.prototype._renderVal
 ReactCompositeComponentBase.prototype._renderValidatedComponent = function(){
   var out = _renderValidatedComponent.apply(this, arguments);
   CssHelper._walkTheDom(out, this.props._parent);
-  console.log(out.props.style)
   return out;
 }
 
@@ -18,10 +17,23 @@ var CssHelper = {
     // return;
     return ComputeCSS(css, allDeclarations, allInharitances);
   },
+  _classNameToSelector: function(className){
+    if(!className){ return; }
+
+    var classNames = className.split(' ')
+    if(classNames.length > 0){
+      return '.' + classNames.join('.');
+    } else {
+      return '.' + className;
+    }
+
+  },
   _getClassName: function(node, parent){
     var stop = false;
+    var selector = CssHelper._classNameToSelector(node.props.className);
     if(parent){
-      if(!node.tagName && !node.cssUpdate){
+
+      if(!node.tagName){
         node.props._parent = parent;
         return;
       }
@@ -30,15 +42,15 @@ var CssHelper = {
       for (var i = 0; i < existingClasses.length; i++) {
         allClasses.push(existingClasses[i])
       };
-      if(node.props.className){
-        allClasses.push('.' + node.props.className);
+      if(selector){
+        allClasses.push(selector);
       } else {
         allClasses.push(node.tagName);
       }
       node.props.parentClassName = allClasses;
     } else {
       //root node
-      node.props.parentClassName = ['.' + node.props.className];
+      node.props.parentClassName = [selector];
     }
     node.props.style = CssHelper._getStyle(node.props.parentClassName);
   },
@@ -114,7 +126,6 @@ var hook = function(React){
     reactClass.mixins = mixins;
     return createClass(reactClass);
   }
-  console.log(React)
 };
 
 hook(React);
@@ -152,6 +163,7 @@ var App = React.createClass({
     })
   },
 	render: function(){
+    console.log('-----------------------------')
 		var className = classSet({
 			"grandmother": true,
       "extra-class": this.state.globalTest

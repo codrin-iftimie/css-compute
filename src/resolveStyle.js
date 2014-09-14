@@ -1,11 +1,3 @@
-function pretifyElem(elem){
-	var elems = elem.split(' ');
-	if(elems.length > 0){
-		return(elems.join('.'))
-	} else {
-		return elem;
-	}
-}
 function overwriteDeclarations(existingDeclarations, newDeclarations){
 	var out = [];
 	var newProps = [];
@@ -47,12 +39,9 @@ function prioritizeParents(parents, forSelector){
 	parents.forEach(function(parent){
 		var elems = parent.split(' ');
 		elems.splice(0, 1);
-		if(byLength[elems.length -1]){
-			byLength[elems.length - 1].push(parent)
-		} else {
-			byLength[elems.length - 1] = [parent];
-		}
-	})
+		byLength[elems.length - 1] = byLength[elems.length - 1] || [parent];
+		byLength[elems.length - 1].push(parent);
+	});
 	parents = [];
 	byLength.forEach(function(count){
 		if(count.length > 1){
@@ -72,12 +61,18 @@ function prioritizeParents(parents, forSelector){
 		}
 
 	});
+	parents.sort(function(par1, par2){
+		var score1 = getSubLenScore(par1, forSelector);
+		var score2 = getSubLenScore(par2, forSelector);
+		return score1 > score2;
+	});
+
 
 	return parents;
 }
 
 var getScore = function(parent, forSelector){
-	elems = parent.split(' ');
+	var elems = parent.split(' ');
 	elems.splice(0, 1);
 	var sum = 0;
 	var indexOfFirstElem = forSelector.indexOf(elems[0])
@@ -89,33 +84,99 @@ var getScore = function(parent, forSelector){
 	return sum + rating;
 }
 
-var resolveStyle = function(forSelector, allDeclarations, allInharitances){
-	var lastElem = forSelector[forSelector.length - 1];
-	lastElem = pretifyElem(lastElem);
-	var parents = [];
+var getSubLen = function(elem){
+	var elems = elem.split('.')
+	elems.splice(0, 1);
+	return elems.length;
+}
 
+var getSubLenScore = function(parent, forSelector){
+	var elems = parent.split(' ');
+	elems.splice(0, 1);
+	var sum = 0;
+	var indexOfFirstElem = findSelect(elems[0], forSelector);
+	var rating = forSelector.length - indexOfFirstElem;
+	elems.forEach(function(elem, index){
+		var len = getSubLen(elem);
+		var indexOfElem = forSelector.indexOf(elem);
+		if(indexOfElem > -1){
+			sum += (indexOfElem + 1000 * (len + rating))
+		}
+	});
+	return sum;
+}
+
+var findSelect = function(what, where){
+	var trueIndex = where.indexOf(what);
+	if(trueIndex < 0){
+		for (var i = 0; i < where.length; i++) {
+			var theWhere = where[i];
+			var thisWhere = theWhere.split('.');
+			thisWhere.splice(0, 1);
+			for (var j = 0; j < thisWhere.length; j++) {
+				subSelect = '.' + thisWhere[j]
+				if(subSelect === what){
+					return i;
+				};
+			}
+		};
+	}
+	return trueIndex;
+}
+
+var composedSelectorIndex = [0, 0];
+var resolveStyle = function(forSelector, allDeclarations, allInharitances){	
+	var lastElem = forSelector[forSelector.length - 1];
+
+
+	var parents = [];
 	if(allInharitances[lastElem]){
+		var composedLastElem = lastElem.split('.');
+		composedLastElem.splice(0, 1);
+		if(composedLastElem.length > 1){
+			for (var i = 0; i < composedLastElem.length; i++) {
+				var tmpPars = allInharitances[composedLastElem[i]]
+				if(tmpPars){
+					for (var j = 0; j < tmpPars.length; j++) {
+						parents.push(tmpPars[j])
+					};
+				}
+			};
+		}
 		for (var i = 0; i < allInharitances[lastElem].length; i++) {
 			parents.push(allInharitances[lastElem][i])
 		};
 	}
-
 	var existingDeclarations = []
 	if(allDeclarations[lastElem]){
 		for (var i = 0; i < allDeclarations[lastElem].length; i++) {
 		 	existingDeclarations.push(allDeclarations[lastElem][i])
 		};
 	}
+
+	var lastElems = lastElem.split('.');
+	lastElems.splice(0, 1);
+
+	if(lastElems.length > 1){
+		for (var i = 0; i < lastElems.length; i++) {
+			var sub = '.' + lastElems[i];
+			if(allDeclarations[sub]){
+				for (var j = 0; j < allDeclarations[sub].length; j++) {
+				 	existingDeclarations.push(allDeclarations[sub][j])
+				};
+			}
+		};
+	}
+
 	var validParents = [];
 
 	parents = prioritizeParents(parents, forSelector);
-
 	parents.forEach(function(parent){
 		var isValid = true;
 		var elems = parent.split(' ');
 		elems.splice(0, 1);
 		var firstElem = elems[0];
-		var indexOfFirst = forSelector.indexOf(firstElem);
+		var indexOfFirst = findSelect(firstElem, forSelector);
 		if(indexOfFirst >= 0){
 			var selectClone = [];
 			forSelector.forEach(function(elem){
@@ -124,10 +185,9 @@ var resolveStyle = function(forSelector, allDeclarations, allInharitances){
 			selectClone.splice(0, indexOfFirst);
 			var checks = 0;
 			elems.forEach(function(elem, indexOfElem){
-				var indexInsideSelector = selectClone.indexOf(elem);
+				var indexInsideSelector = findSelect(elem, selectClone);
 				if(indexInsideSelector === -1){
 					isValid = false;
-					return;
 				}
 				if(indexOfElem < indexInsideSelector){
 					checks ++;
@@ -142,7 +202,7 @@ var resolveStyle = function(forSelector, allDeclarations, allInharitances){
 		if(isValid){
 			validParents.push(parent);
 		}
-	})
+	});
 	validParents.forEach(function(valid){
 		valid = valid.substr(1);
 		if(allDeclarations[valid]){
