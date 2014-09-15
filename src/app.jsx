@@ -36,11 +36,7 @@ var CssHelper = {
     var stop = false;
     var selector = CssHelper._classNameToSelector(node.props.className);
     if(parent){
-
-      if(!node.tagName){
-        node.props._parent = parent;
-        return;
-      }
+      node.props._parent = parent;
       var existingClasses = parent.props.parentClassName;
       var allClasses = [];
       for (var i = 0; i < existingClasses.length; i++) {
@@ -49,7 +45,7 @@ var CssHelper = {
       if(selector){
         allClasses.push(selector);
       } else {
-        allClasses.push(node.tagName);
+        return;
       }
       node.props.parentClassName = allClasses;
     } else {
@@ -96,11 +92,6 @@ var CssHelper = {
     }
   }
 }
-var once = false;
-ReactMultiChild.Mixin.mountChildren = function(){
-  var out = mountChildren.apply(this, arguments);
-  return out;
-};
 
 /** @jsx React.DOM */
 var React = require("react/addons");
@@ -108,21 +99,11 @@ var classSet = React.addons.classSet;
 
 
 
-var ComputeMixin = {
-  updateStyle: function(){
-      if(this.props._parent){
-        CssHelper._walkTheDom(this._descriptor._renderedComponent, this.props._parent);
-      } else {
-        CssHelper._walkTheDom(this._descriptor._renderedComponent);
-      }
-  }
-}
 
 var hook = function(React){
   var createClass = React.createClass;
   React.createClass = function(reactClass){
     var mixins = reactClass.mixins || [];
-    mixins.push(ComputeMixin);
     reactClass.mixins = mixins;
     return createClass(reactClass);
   }
