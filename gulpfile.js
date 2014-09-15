@@ -18,7 +18,7 @@ var stylesGlob = './styles/*.less',
     scriptsGlob = ['./src/**/*.js*', './lib/**/*.js*', './node_modules/react/**/*.js'],
     imagesGlob = ['./styles/**/*{.jpg,.png}'],
     htmlGlob = ['./app/**/*{.html,.htm}'],
-    buildGlob = './dist/**/*'; 
+    buildGlob = './dist/**/*';
 
 function lessTransform() {
   return less({
@@ -34,23 +34,22 @@ function handleError(task) {
 }
 
 function scripts(watch) {
-  console.log(__dirname)
   var bundler, rebundle;
   if(watch) {
     bundler = watchify('./src/app.jsx', {basedir: __dirname});
   } else {
     bundler = browserify('./src/app.jsx', {basedir: __dirname});
   }
- 
+
   bundler.transform(reactify);
- 
+
   rebundle = function() {
-    var stream = bundler.bundle({debug: !production});
+    var stream = bundler.bundle();
     stream.on('error', handleError('Browserify'));
     stream = stream.pipe(source('app.js'));
     return stream.pipe(gulp.dest('./dist/js'));
   };
- 
+
   bundler.on('update', rebundle);
   return rebundle();
 }
@@ -58,7 +57,7 @@ function scripts(watch) {
 gulp.task('scripts', function() {
   return scripts(false);
 });
- 
+
 gulp.task('watchScripts', function() {
   return scripts(true);
 });

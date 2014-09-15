@@ -13,11 +13,11 @@ function overwriteDeclarations(existingDeclarations, newDeclarations){
 		var isNewProp = true;
 		out.forEach(function(existingDeclaration){
 			if(existingDeclaration.property === newDeclaration.property) {
-				//if we have the same property 
+				//if we have the same property
 				// we replace the existing value with the new one
 				isNewProp = false;
 				existingDeclaration.value = newDeclaration.value;
-			} 
+			}
 		});
 		if(isNewProp){
 			newProps.push(newDeclaration);
@@ -25,7 +25,7 @@ function overwriteDeclarations(existingDeclarations, newDeclarations){
 	});
 	newProps.forEach(function(prop){
 		out.push(prop);
-	})
+	});
 	return out;
 }
 
@@ -35,7 +35,7 @@ function prioritizeParents(parents, forSelector){
 	// in case they have the same length
 	var byLength = []
 	var max = parents.length;
-	
+
 	parents.forEach(function(parent){
 		var elems = parent.split(' ');
 		elems.splice(0, 1);
@@ -125,7 +125,7 @@ var findSelect = function(what, where){
 }
 
 var composedSelectorIndex = [0, 0];
-var resolveStyle = function(forSelector, allDeclarations, allInharitances){	
+var resolveStyle = function(forSelector, allDeclarations, allInharitances){
 	var lastElem = forSelector[forSelector.length - 1];
 
 

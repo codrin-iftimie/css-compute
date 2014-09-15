@@ -1,3 +1,7 @@
+var ComputeCSS = require("./resolveStyle.js");
+var CSS = require('../styles/main.css.js');
+var allDeclarations = CSS.allDeclarations;
+var allInharitances = CSS.allInharitances;
 var ReactCompositeComponentBase = require('react/lib/ReactCompositeComponent').Base
 
 var _renderValidatedComponent = ReactCompositeComponentBase.prototype._renderValidatedComponent;
@@ -57,7 +61,7 @@ var CssHelper = {
   _getFirstChild: function(node, startFrom){
     startFrom = startFrom || 0;
     var kids = node.props.children;
- 
+
     if(!kids || startFrom === kids.length) {
       return ;
     }
@@ -100,10 +104,6 @@ ReactMultiChild.Mixin.mountChildren = function(){
 
 /** @jsx React.DOM */
 var React = require("react/addons");
-var ComputeCSS = require("./resolveStyle.js");
-var CSS = require('../styles/main.css.js');
-var allDeclarations = CSS.allDeclarations;
-var allInharitances = CSS.allInharitances;
 var classSet = React.addons.classSet;
 
 
