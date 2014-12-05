@@ -1,103 +1,16 @@
-var ComputeCSS = require("./resolveStyle.js");
-var CSS = require('../styles/main.css.js');
-var allDeclarations = CSS.allDeclarations;
-var allInharitances = CSS.allInharitances;
-var ReactCompositeComponentBase = require('react/lib/ReactCompositeComponent').Base
-
-var _renderValidatedComponent = ReactCompositeComponentBase.prototype._renderValidatedComponent;
-ReactCompositeComponentBase.prototype._renderValidatedComponent = function(){
-  var out = _renderValidatedComponent.apply(this, arguments);
-  CssHelper._walkTheDom(out, this.props._parent);
-  return out;
-}
-
-
-var ReactMultiChild = require('react/lib/ReactMultiChild');
-
-var mountChildren = ReactMultiChild.Mixin.mountChildren;
-
-var CssHelper = {
-  _getStyle: function(css){
-    // return;
-    return ComputeCSS(css, allDeclarations, allInharitances);
-  },
-  _classNameToSelector: function(className){
-    if(!className){ return; }
-
-    var classNames = className.split(' ')
-    if(classNames.length > 0){
-      return '.' + classNames.join('.');
-    } else {
-      return '.' + className;
-    }
-
-  },
-  _getClassName: function(node, parent){
-    var stop = false;
-    var selector = CssHelper._classNameToSelector(node.props.className);
-    if(parent){
-      node.props._parent = parent;
-      var existingClasses = parent.props.parentClassName;
-      var allClasses = [];
-      for (var i = 0; i < existingClasses.length; i++) {
-        allClasses.push(existingClasses[i])
-      };
-      if(selector){
-        allClasses.push(selector);
-      } else {
-        return;
-      }
-      node.props.parentClassName = allClasses;
-    } else {
-      //root node
-      node.props.parentClassName = [selector];
-    }
-    node.props.style = CssHelper._getStyle(node.props.parentClassName);
-  },
-  _getFirstChild: function(node, startFrom){
-    startFrom = startFrom || 0;
-    var kids = node.props.children;
-
-    if(!kids || startFrom === kids.length) {
-      return ;
-    }
-
-    for (var i = startFrom; i < kids.length; i++) {
-      var kid = kids[i];
-      if(typeof kid === 'object'){
-        return [i, kid];
-      }
-    };
-  },
-  _walkTheDom: function(node, parent){
-    var parNode = node;
-    CssHelper._getClassName(node, parent);
-    var lastChild = 0;
-    var firstNode = CssHelper._getFirstChild(node);
-    if(firstNode){
-      lastChild = firstNode[0] + 1;
-      node = firstNode[1];
-    } else {
-      node = null;
-    }
-    while(node){
-      CssHelper._walkTheDom(node, parNode);
-      var nextNode = CssHelper._getFirstChild(parNode, lastChild);
-      if(nextNode){
-        node = nextNode[1];
-        lastChild = nextNode[0] + 1;
-      } else {
-        node = null;
-      }
-    }
-  }
-}
+require("./css");
 
 /** @jsx React.DOM */
 var React = require("react/addons");
 var classSet = React.addons.classSet;
+var Perf = React.addons.Perf;
 
-
+var PerfMixin = {
+  componentDidMount: function(){
+  },
+  componentDidUpdate: function(){
+  }
+}
 
 
 var hook = function(React){
@@ -130,6 +43,7 @@ var ChildComp = React.createClass({
 	}
 });
 var App = React.createClass({
+  mixins: [PerfMixin],
   getInitialState: function(){
     return{
       globalTest: false
@@ -140,11 +54,10 @@ var App = React.createClass({
       test: true
     });
     this.setState({
-      globalTest: true
+      globalTest: !this.state.globalTest
     })
   },
 	render: function(){
-    console.log('-----------------------------')
 		var className = classSet({
 			"grandmother": true,
       "extra-class": this.state.globalTest
@@ -154,19 +67,21 @@ var App = React.createClass({
 				grandmother
 				<div className="mother">
 					mother
-					<div className="daughter">
+					<span className="daughter">
 						something
 						<ChildComp  ref="first-child-comp"/>
-					</div>
+            <span className="some-other-com">mother of god</span>
+					</span>
           <ChildComp />
 				</div>
         <ChildComp />
+        <div className="some-other-com">god of the arena</div>
         <button onClick={this._handleButtonClick}>I will change something</button>
 			</div>
 		)
 	}
 });
-var comp3 = React.renderComponent(
+var comp3 = React.render(
 	<App/>,
 	document.getElementById("test")
 );

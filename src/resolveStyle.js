@@ -1,17 +1,18 @@
-function overwriteDeclarations(existingDeclarations, newDeclarations){
-	var out = [];
-	var newProps = [];
+var specificity = require("specificity"),
+		_ = require("lodash");
 
-	existingDeclarations.forEach(function(existingDeclaration){
-		var declar = {
-			property: existingDeclaration.property,
-			value: existingDeclaration.value
-		}
-		out.push(declar);
-	});
-	newDeclarations.forEach(function(newDeclaration){
-		var isNewProp = true;
+function overwriteDeclarations(existingDeclarations, newDeclarations){
+	var out = _.clone(existingDeclarations),
+			newProps = [],
+			isNewProp = false;
+
+	if(out.length === 0) {
+		return _.clone(newDeclarations);
+	}
+
+	_.forEach(newDeclarations, function(newDeclaration){
 		out.forEach(function(existingDeclaration){
+			isNewProp = true;
 			if(existingDeclaration.property === newDeclaration.property) {
 				//if we have the same property
 				// we replace the existing value with the new one
@@ -30,83 +31,14 @@ function overwriteDeclarations(existingDeclarations, newDeclarations){
 }
 
 
-function prioritizeParents(parents, forSelector){
-	// prioritizize by specifity
-	// in case they have the same length
-	var byLength = []
-	var max = parents.length;
-
-	parents.forEach(function(parent){
-		var elems = parent.split(' ');
-		elems.splice(0, 1);
-		byLength[elems.length - 1] = byLength[elems.length - 1] || [parent];
-		byLength[elems.length - 1].push(parent);
-	});
-	parents = [];
-	byLength.forEach(function(count){
-		if(count.length > 1){
-			count.sort(function(par1, par2){
-				var score1 = getScore(par1, forSelector);
-				var score2 = getScore(par2, forSelector);
-				return score1 > score2;
-			});
-
-			count.forEach(function(parent){
-				parents.push(parent);
-			});
-		} else {
-			if(count.length === 1){
-				parents.push(count[0])
-			}
-		}
-
-	});
+function prioritizeParents(parents){
 	parents.sort(function(par1, par2){
-		var score1 = getSubLenScore(par1, forSelector);
-		var score2 = getSubLenScore(par2, forSelector);
-		return score1 > score2;
+		return specificity.calculate(par1) > specificity.calculate(par2);
 	});
-
-
 	return parents;
 }
 
-var getScore = function(parent, forSelector){
-	var elems = parent.split(' ');
-	elems.splice(0, 1);
-	var sum = 0;
-	var indexOfFirstElem = forSelector.indexOf(elems[0])
-	elems.forEach(function(elem){
-		var indexOfElem = forSelector.indexOf(elem);
-		sum += indexOfElem
-	})
-	var rating = forSelector.length - indexOfFirstElem;
-	return sum + rating;
-}
-
-var getSubLen = function(elem){
-	var elems = elem.split('.')
-	elems.splice(0, 1);
-	return elems.length;
-}
-
-var getSubLenScore = function(parent, forSelector){
-	var elems = parent.split(' ');
-	elems.splice(0, 1);
-	var sum = 0;
-	var indexOfFirstElem = findSelect(elems[0], forSelector);
-	var rating = forSelector.length - indexOfFirstElem;
-	elems.forEach(function(elem, index){
-		var len = getSubLen(elem);
-		var indexOfElem = forSelector.indexOf(elem);
-		if(indexOfElem > -1){
-			sum += (indexOfElem + 1000 * (len + rating))
-		}
-	});
-	return sum;
-}
-
-var findSelect = function(what, where){
+function findSelect(what, where){
 	var trueIndex = where.indexOf(what);
 	if(trueIndex < 0){
 		for (var i = 0; i < where.length; i++) {
@@ -147,7 +79,7 @@ var resolveStyle = function(forSelector, allDeclarations, allInharitances){
 			parents.push(allInharitances[lastElem][i])
 		};
 	}
-	var existingDeclarations = []
+	var existingDeclarations = [];
 	if(allDeclarations[lastElem]){
 		for (var i = 0; i < allDeclarations[lastElem].length; i++) {
 		 	existingDeclarations.push(allDeclarations[lastElem][i])
@@ -189,7 +121,7 @@ var resolveStyle = function(forSelector, allDeclarations, allInharitances){
 				if(indexInsideSelector === -1){
 					isValid = false;
 				}
-				if(indexOfElem < indexInsideSelector){
+				if(indexOfElem <= indexInsideSelector){
 					checks ++;
 				}
 			});
